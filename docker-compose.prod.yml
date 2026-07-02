@@ -1,0 +1,39 @@
+services:
+  postgres_db:
+    image: postgres:16-alpine
+    env_file:
+      - ./backend/.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgres://scripture:scripture@postgres_db:5432/scripture
+      PORT: 3000
+      NODE_ENV: production
+    depends_on:
+      - postgres_db
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-replace-with-google-client-id}
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    driver: local
