@@ -1,6 +1,6 @@
 # Scripture
 
-Scripture is a React and Fastify application with Google sign-in, signed session cookies, and a Postgres-backed schema for user-owned scripture entries.
+Scripture is a React and Fastify application with Google sign-in, a JWT session stored in an HttpOnly cookie, and a Postgres-backed schema prepared for user-owned scripture entries.
 
 ## Structure
 
@@ -39,10 +39,13 @@ The current implementation includes:
 
 - Google login in the frontend.
 - Backend verification of the Google credential.
-- A signed HttpOnly session cookie.
+- A signed JWT session token stored in an HttpOnly cookie.
 - A logout endpoint.
 - A health endpoint.
+- Protected REST API CRUD routes for user-owned scripture entries.
 - Drizzle schema definitions for users and scripture entries.
+
+Scripture entry frontend pages are not implemented yet.
 
 The placeholder directories are intentionally empty until the existing feature set grows into them.
 
@@ -92,6 +95,22 @@ cd backend
 npm run db:migrate
 ```
 
+## Backend API
+
+Authentication:
+
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+
+Scripture entries require the `session` HttpOnly cookie:
+
+- `POST /api/scripture-entries`
+- `GET /api/scripture-entries`
+- `GET /api/scripture-entries/:id`
+- `PUT /api/scripture-entries/:id`
+- `PATCH /api/scripture-entries/:id`
+- `DELETE /api/scripture-entries/:id`
+
 ## Production Build
 
 Backend:
@@ -114,5 +133,3 @@ Containerized production-style compose:
 ```sh
 docker compose --env-file frontend/.env -f docker-compose.prod.yml up --build
 ```
-# scripture-journal
-# scripture-journal

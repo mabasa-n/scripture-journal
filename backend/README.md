@@ -17,7 +17,27 @@ src/
 └── utils
 ```
 
-The current implementation includes health routes, Google auth routes, session cookie setup, and the Drizzle schema.
+The current implementation includes health routes, Google auth routes, a signed JWT stored in an HttpOnly session cookie, protected scripture entry CRUD routes, and the Drizzle schema.
+
+## API
+
+Authentication:
+
+```text
+POST /api/auth/login
+POST /api/auth/logout
+```
+
+Scripture entries require the `session` HttpOnly cookie:
+
+```text
+POST /api/scripture-entries
+GET /api/scripture-entries
+GET /api/scripture-entries/:id
+PUT /api/scripture-entries/:id
+PATCH /api/scripture-entries/:id
+DELETE /api/scripture-entries/:id
+```
 
 ## Scripts
 

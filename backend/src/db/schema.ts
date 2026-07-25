@@ -5,15 +5,18 @@ import {
   text,
   timestamp,
   index,
+  check,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // 1. Users Table
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(), // Maps to gen_random_uuid()
   googleId: varchar("google_id", { length: 255 }).unique().notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // 2. Scripture Entries Table
@@ -33,13 +36,32 @@ export const scriptureEntries = pgTable(
     }).notNull(),
     scriptureText: text("scripture_text").notNull(),
     description: text("description"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => {
-    // 3. Index for Performance
     return {
       userIdIdx: index("idx_scripture_entries_user_id").on(table.userId),
+      headingNotEmpty: check(
+        "scripture_entries_heading_not_empty",
+        sql`char_length(btrim(${table.heading})) > 0`,
+      ),
+      scriptureReferenceNotEmpty: check(
+        "scripture_entries_reference_not_empty",
+        sql`char_length(btrim(${table.scriptureReference})) > 0`,
+      ),
+      scriptureTextNotEmpty: check(
+        "scripture_entries_text_not_empty",
+        sql`char_length(btrim(${table.scriptureText})) > 0`,
+      ),
+      descriptionNotEmptyWhenPresent: check(
+        "scripture_entries_description_not_empty_when_present",
+        sql`${table.description} IS NULL OR char_length(btrim(${table.description})) > 0`,
+      ),
     };
   },
 );

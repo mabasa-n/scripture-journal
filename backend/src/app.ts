@@ -4,6 +4,7 @@ import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import { env } from "./config/env";
 import { authRoutes } from "./modules/auth/auth.routes";
+import { scriptureEntryRoutes } from "./modules/scripture-entries/scripture-entry.routes";
 import { healthRoutes } from "./routes/health.routes";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -25,14 +26,21 @@ export async function buildApp(): Promise<FastifyInstance> {
     credentials: true,
   });
 
-  await app.register(fastifyJwt, { secret: env.jwtSecret });
   await app.register(fastifyCookie, {
-    secret: env.jwtSecret, // Signs the cookie
     hook: "onRequest",
+  });
+  await app.register(fastifyJwt, {
+    secret: env.jwtSecret,
+    sign: { expiresIn: "7d" },
+    cookie: {
+      cookieName: "session",
+      signed: false,
+    },
   });
 
   await app.register(healthRoutes);
   await app.register(authRoutes);
+  await app.register(scriptureEntryRoutes);
 
   return app;
 }

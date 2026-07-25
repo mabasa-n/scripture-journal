@@ -27,17 +27,28 @@ export async function authRoutes(app: FastifyInstance) {
 
         const payload = ticket.getPayload();
 
-        if (!payload || !payload.email) {
+        if (!payload || !payload.email || !payload.email_verified) {
           return reply.status(401).send({ error: "Invalid Google token" });
         }
 
         const existingUsers = await db
           .select()
           .from(users)
-          .where(eq(users.email, payload.email));
+          .where(eq(users.googleId, payload.sub));
         let userId: string;
 
         if (existingUsers.length === 0) {
+          const usersWithEmail = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, payload.email));
+
+          if (usersWithEmail.length > 0) {
+            return reply.status(409).send({
+              error: "A user with this email already exists",
+            });
+          }
+
           // First time logging in
           const newUser = await db
             .insert(users)
@@ -52,10 +63,10 @@ export async function authRoutes(app: FastifyInstance) {
           userId = existingUsers[0].id;
         }
 
-        // 4. Create internal session token
+        // 4. Create internal signed session token
         const token = app.jwt.sign({ userId, email: payload.email });
 
-        // 5. Send secure HttpOnly cookie
+        // 5. Store the session token in an HttpOnly cookie
         reply.setCookie("session", token, {
           path: "/",
           httpOnly: true, // Javascript cannot read this (prevents XSS)
