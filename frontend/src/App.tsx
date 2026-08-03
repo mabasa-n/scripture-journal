@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
-import { env } from "../config/env";
+import { env } from "./config/env";
 
 function App() {
   const [authStatus, setAuthStatus] = useState<string>("Not logged in");
@@ -27,7 +27,7 @@ function App() {
       const data = await response.json();
 
       if (response.ok) {
-        setAuthStatus(`Success! Logged in as User ID: ${data.userId}`);
+        setAuthStatus(`Success! Logged in as User ID: ${data.user?.id}`);
       } else {
         setAuthStatus(`Login Failed: ${data.error}`);
       }
