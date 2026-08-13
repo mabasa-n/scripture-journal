@@ -2,6 +2,14 @@
 
 Scripture is a React and Fastify application with Google sign-in, a JWT session stored in an HttpOnly cookie, and a Postgres-backed schema prepared for user-owned scripture entries.
 
+## V1 In-Scope
+
+- Google Auth, Add Verse, List Verses, View Single Verse Detail.
+
+## V1 Non-Goals (Parked)
+
+- Notes, Editing, Deleting, Multi-user permissions, Verse Search/Filtering.
+
 ## Structure
 
 ```text
