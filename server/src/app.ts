@@ -1,6 +1,8 @@
 import Fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import { validateEnv } from "./config/env";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const env = validateEnv();
@@ -25,12 +27,28 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   //   Health check endpoint
-  app.get("/health", async () => {
+  app.get("/api/v1/health", async () => {
     return {
       status: "ok",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     };
+  });
+
+  app.get("/api/v1/health/db", async (_request, reply) => {
+    try {
+      const result = await db.execute(sql`SELECT NOW()`);
+
+      return {
+        status: "ok",
+        apiTimestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      app.log.error(error);
+      return reply
+        .status(503)
+        .send({ status: "error", message: "Database connection failed" });
+    }
   });
 
   return app;
