@@ -1,19 +1,52 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
-const fetchDbHealth = async () => {
-  const response = await fetch("/api/v1/health/db");
-  if (!response.ok) {
-    throw new Error("Failed to fetch database health");
-  } else {
-    return response.json();
-  }
-};
+interface DbHealthResponse {
+  status: string;
+  apiTimestamp: string;
+}
 
 export default function App() {
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["healthcheck-db"],
-    queryFn: fetchDbHealth,
-  });
+  const [data, setData] = useState<DbHealthResponse | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchDbHealth = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch("/api/v1/health/db", {
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch database health");
+        } else {
+          const result: DbHealthResponse = await response.json();
+          setData(result);
+        }
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        } else {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "An unknown error has occurred",
+          );
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDbHealth();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
@@ -38,9 +71,7 @@ export default function App() {
             </p>
           )}
 
-          {isError && (
-            <p className="text-red-500">Error: {(error as Error).message}</p>
-          )}
+          {error && <p className="text-red-500">Error: {error}</p>}
 
           {data && (
             <div className="space-y-2">
